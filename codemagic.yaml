@@ -4,10 +4,35 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
+      vars:
+        BUILD_LIBRARY_FOR_DISTRIBUTION: "NO"
+
     scripts:
-      - flutter build ios --simulator
-      - mkdir -p build/ios/ipa
-      - zip -r build/ios/ipa/Runner.app.zip build/ios/iphonesimulator/Runner.app
+      # 1) Clean Flutter
+      - name: Flutter clean
+        script: |
+          flutter clean
+          flutter pub get
+
+      # 2) Clean & reinstall pods (important!)
+      - name: Clean and install pods
+        script: |
+          cd ios
+          rm -rf Pods Podfile.lock
+          pod repo update
+          pod install
+          cd ..
+
+      # 3) Build iOS for simulator
+      - name: Build iOS
+        script: |
+          flutter build ios --simulator --no-codesign
+
+      # 4) Package output
+      - name: Create .app.zip
+        script: |
+          mkdir -p build/ios/ipa
+          zip -r build/ios/ipa/Runner.app.zip build/ios/iphonesimulator/Runner.app
+
     artifacts:
       - build/ios/ipa/Runner.app.zip
-
