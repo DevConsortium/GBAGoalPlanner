@@ -6,16 +6,13 @@ workflows:
       xcode: latest
       vars:
         BUILD_LIBRARY_FOR_DISTRIBUTION: "NO"
-
     scripts:
-      # 1) Clean Flutter
-      - name: Flutter clean
+      - name: Flutter clean & get
         script: |
           flutter clean
           flutter pub get
 
-      # 2) Clean & reinstall pods (important!)
-      - name: Clean and install pods
+      - name: Pod clean & install
         script: |
           cd ios
           rm -rf Pods Podfile.lock
@@ -23,13 +20,11 @@ workflows:
           pod install
           cd ..
 
-      # 3) Build iOS for simulator
-      - name: Build iOS
+      - name: Build iOS simulator app
         script: |
           flutter build ios --simulator --no-codesign
 
-      # 4) Package output
-      - name: Create .app.zip
+      - name: Package app
         script: |
           mkdir -p build/ios/ipa
           zip -r build/ios/ipa/Runner.app.zip build/ios/iphonesimulator/Runner.app
