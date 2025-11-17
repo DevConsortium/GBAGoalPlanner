@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tea/entrypoint.dart';
-import 'package:tea/features/authentication/screens/onboarding/onboarding.dart';
 import 'package:tea/features/shop/screens/Nointernet/ConnectivityWrapper.dart';
 
 import 'package:tea/utils/theme/theme.dart';

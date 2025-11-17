@@ -14,8 +14,6 @@ import 'features/shop/controllers/Review/ReviewController.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 FlutterLocalNotificationsPlugin();
 
-
-
 /// 2️⃣ Initialize notifications
 Future<void> initializeNotifications() async {
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');

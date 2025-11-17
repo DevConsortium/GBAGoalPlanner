@@ -16,8 +16,8 @@ dependencies:
   flutter_native_splash: ^2.4.6
   google_fonts: ^6.2.1
   http: ^1.5.0
-#  intl: ^0.20.2
-  intl: ^0.18.1
+  intl: ^0.20.2
+#  intl: ^0.18.1
 
   logger: ^2.5.0
   url_launcher: ^6.3.1
@@ -33,15 +33,15 @@ dependencies:
   android_alarm_manager_plus: ^5.0.0
   share_plus: ^7.2.1
   path_provider: ^2.1.2
-#  flutter_local_notifications: ^17.1.2
-  flutter_local_notifications: ^17.2.4
+  flutter_local_notifications: ^17.1.2
+#  flutter_local_notifications: ^17.2.4
   shared_preferences: ^2.3.3
   cupertino_icons: ^1.0.8
 #  timezone: ^0.9.3
   timezone: ^0.9.0
   flutter_timezone: ^5.0.1
-#  awesome_notifications: ^0.10.1
-  awesome_notifications: ^0.7.4+1
+  awesome_notifications: ^0.10.1
+#  awesome_notifications: ^0.7.4+1
 
   rename: ^3.1.0
 
