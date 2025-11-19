@@ -21,8 +21,8 @@ jobs:
       - name: Install CocoaPods
         run: sudo gem install cocoapods
 
-      - name: Build iOS IPA
-        run: flutter build ipa --release
+      - name: Build unsigned IPA
+        run: flutter build ipa --release --no-codesign
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
