@@ -84,7 +84,7 @@ Future<void> scheduleNotification(
     androidAllowWhileIdle: true,
     uiLocalNotificationDateInterpretation:
     UILocalNotificationDateInterpretation.absoluteTime,
-    matchDateTimeComponents: DateTimeComponents.time, // repeat daily at same time
+    matchDateTimeComponents: DateTimeComponents.time,
   );
 
   debugPrint('✅ Notification scheduled for $tzTime');
