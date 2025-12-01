@@ -132,6 +132,41 @@ class _PremiumBadgeBackgroundScreenState extends State<PremiumBadgeBackgroundScr
     }
   }
 
+
+  // Future<void> _captureAndShare() async {
+  //   try {
+  //     // Wait for widget to finish rendering
+  //     await Future.delayed(Duration(milliseconds: 100));
+  //
+  //     RenderRepaintBoundary boundary =
+  //     _globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+  //
+  //     if (boundary.debugNeedsPaint) {
+  //       // Wait one more frame if still not ready
+  //       await Future.delayed(const Duration(milliseconds: 20));
+  //       return _captureAndShare();  // retry once
+  //     }
+  //
+  //     ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+  //
+  //     ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+  //     Uint8List pngBytes = byteData!.buffer.asUint8List();
+  //
+  //     final directory = await getTemporaryDirectory();
+  //     final imagePath = '${directory.path}/shared_badge.png';
+  //     final file = File(imagePath);
+  //     await file.writeAsBytes(pngBytes);
+  //
+  //     await Share.shareXFiles(
+  //       [XFile(imagePath)],
+  //       text: '🎉 I just earned a Premium Badge!',
+  //     );
+  //   } catch (e) {
+  //     debugPrint('Error capturing and sharing: $e');
+  //   }
+  // }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

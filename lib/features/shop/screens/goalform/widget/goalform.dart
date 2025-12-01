@@ -102,6 +102,28 @@ class _GoalFormState extends State<GoalForm> {
     'LEG1', 'LEG2',
   ];
 
+  final List<String> goalLabelsList = [
+    'Short Term Goal 1',
+    'Short Term Goal 2',
+
+    'Mid Term Goal 1',
+    'Mid Term Goal 2',
+    'Mid Term Goal 3',
+    'Mid Term Goal 4',
+    'Mid Term Goal 5',
+    'Mid Term Goal 6',
+
+    'Long Term Goal 1',
+    'Long Term Goal 2',
+    'Long Term Goal 3',
+    'Long Term Goal 4',
+    'Long Term Goal 5',
+    'Long Term Goal 6',
+
+    'Legacy Goal 1',
+    'Legacy Goal 2',
+  ];
+
 
 // Then use goalFields to initialize controllers and categories
   late final Map<String, TextEditingController> _controllers;
@@ -161,10 +183,12 @@ class _GoalFormState extends State<GoalForm> {
 
 
   Widget _buildGoalInput(String fieldName) {
+    final int index = goalFields.indexOf(fieldName); // get matching index
+    final String label = goalLabelsList[index];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(fieldName, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         TextFormField(
           controller: _controllers[fieldName],

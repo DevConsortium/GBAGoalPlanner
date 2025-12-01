@@ -48,6 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String? todayEvent;
   String _searchQuery = '';
   bool _showGoals = false;
+  int? lastWeek;
+
   final userId = GetStorage().read('userId');
   final ScrollController _scrollController = ScrollController();
 
@@ -58,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
     todayDayName = getTodayDayName();
     loadTodayEvent();
     _fetchGoals();
-    // _fetchActionPlan();
+    _loadLastWeek();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchActionPlan();
     });
@@ -68,7 +70,11 @@ class _HomeScreenState extends State<HomeScreen> {
     Map<String, dynamic> step,
     int newProgress,
     int currentWeek,
+
   ) async {
+    int previousWeek = currentWeek - 1;
+    print(currentWeek);
+    print(previousWeek);
     try {
       final stepKey = step['title']
           ?.split(':')
@@ -83,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final body = jsonEncode({
         'userId': GetStorage().read('userId'),
-        'weekNumber': currentWeek,
+        'weekNumber': previousWeek,
         'staName': stepKey,
         'progress': newProgress,
       });
@@ -133,7 +139,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final url = Uri.parse(
-        'https://todo.jpsofttechnologies.tech/api/getActionPlan?userId=$userId&weekNumber=$currentWeek',
+        // 'https://todo.jpsofttechnologies.tech/api/getActionPlan?userId=$userId&weekNumber=$currentWeek',
+        'https://todo.jpsofttechnologies.tech/api/getActionPlanhome?userId=$userId',
       );
       final response = await http.get(url);
 
@@ -249,6 +256,64 @@ class _HomeScreenState extends State<HomeScreen> {
     final beginningOfYear = DateTime(now.year, 1, 1);
     final daysPassed = now.difference(beginningOfYear).inDays;
     return ((daysPassed + beginningOfYear.weekday) / 7).ceil();
+  }
+
+  _loadLastWeek() async {
+    final box = GetStorage();
+    final userId = box.read('userId');
+    print("UserID from storage: $userId, type: ${userId.runtimeType}");
+
+    if (userId == null) {
+      print("User ID not found");
+      return;
+    }
+
+    int? week = await getLastWeek(userId);
+    setState(() {
+      lastWeek = week;
+    });
+
+    print("Last week: $lastWeek");
+  }
+
+  Future<int> fetchLastWeekValue() async {
+    final box = GetStorage();
+    final userId = box.read('userId');
+
+    if (userId == null) {
+      print("User ID not found");
+      return 0;   // fallback
+    }
+
+    int? week = await getLastWeek(userId);
+    return week ?? 0; // always return int
+  }
+
+  Future<int?> getLastWeek(dynamic userId) async {
+    try {
+      final id = userId.toString();
+      final url = "https://todo.jpsofttechnologies.tech/api/lastweek?userId=$id";
+      print("Fetching last week from: $url");
+
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        print("API Response: $data");
+
+        final lastWeekValue = data['lastWeek'];
+        if (lastWeekValue != null) {
+          return int.tryParse(lastWeekValue.toString());
+        }
+      } else {
+        print("Failed to fetch last week. Status code: ${response.statusCode}");
+      }
+
+      return null;
+    } catch (e) {
+      print("Error fetching last week: $e");
+      return null;
+    }
   }
 
   String getTodayDayName() {
@@ -852,10 +917,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             onPressed: () async {
+                              final lastWeek = await fetchLastWeekValue();
                               final updated = await _updateActionPlanProgress(
                                 step,
                                 currentProgress.toInt(),
-                                getCurrentWeekNumber(),
+                                lastWeek,
                               );
 
                               if (updated) {
@@ -1342,7 +1408,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             print("Icon tapped!");
                                             Get.to(
                                               () => WeekNavigationScreen(
-                                                currentWeek,
+                                                lastWeek!,
                                               ),
                                             );
                                           },
@@ -1398,7 +1464,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         ActionListSection(
                           loading: _loadingActionPlan,
                           actionPlan: _actionPlan,
-                          onStepTap: (step) => _showStepDetails(context, step),
+                          // onStepTap: (step) => _showStepDetails(context, step),
+                          onStepTap: (step) {
+                            if (step['refresh'] == true) {
+                              _fetchActionPlan();
+                            }
+                            _showStepDetails(context, step);
+
+                          },
+                          lastWeek: lastWeek,
                         ),
                       ],
                     ),
@@ -1548,6 +1622,8 @@ class ActionListSection extends StatelessWidget {
   final Map<String, dynamic> actionPlan;
   final bool loading;
   final Function(Map<String, dynamic> step) onStepTap;
+  final int? lastWeek;
+
 
   int getCurrentWeekNumber() {
     final now = DateTime.now();
@@ -1556,11 +1632,166 @@ class ActionListSection extends StatelessWidget {
     return ((daysPassed + beginningOfYear.weekday) / 7).ceil();
   }
 
+  Future<bool> _showConfirmationDialog(BuildContext context) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Action'),
+          content: const Text(
+            'Are you sure you want to mark this goal as completed?',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    ).then((value) => value ?? false);
+  }
+
+  Future<int> fetchLastWeekValue() async {
+    final box = GetStorage();
+    final userId = box.read('userId');
+
+    if (userId == null) {
+      print("User ID not found");
+      return 0;   // fallback
+    }
+
+    int? week = await getLastWeek(userId);
+    return week ?? 0; // always return int
+  }
+
+  Future<int?> getLastWeek(dynamic userId) async {
+    try {
+      final id = userId.toString();
+      final url = "https://todo.jpsofttechnologies.tech/api/lastweek?userId=$id";
+      print("Fetching last week from: $url");
+
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        print("API Response: $data");
+
+        final lastWeekValue = data['lastWeek'];
+        if (lastWeekValue != null) {
+          return int.tryParse(lastWeekValue.toString());
+        }
+      } else {
+        print("Failed to fetch last week. Status code: ${response.statusCode}");
+      }
+
+      return null;
+    } catch (e) {
+      print("Error fetching last week: $e");
+      return null;
+    }
+  }
+
+
+  Future<bool> _updateActionPlanProgress(
+      Map<String, dynamic> step,
+      int newProgress,
+      int currentWeek,
+
+      ) async {
+    int previousWeek = currentWeek - 1;
+    print(currentWeek);
+    print(previousWeek);
+    try {
+      final stepKey = step['title']
+          ?.split(':')
+          .first
+          ?.trim()
+          ?.toLowerCase()
+          ?.replaceAll(' ', '');
+
+      final url = Uri.parse(
+        'https://todo.jpsofttechnologies.tech/api/updateProgress',
+      );
+
+      final body = jsonEncode({
+        'userId': GetStorage().read('userId'),
+        'weekNumber': previousWeek,
+        'staName': stepKey,
+        'progress': newProgress,
+      });
+
+      print('📤 Sending PUT → $url');
+      print('📦 Body → $body');
+
+      final response = await http.put(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+
+      print('📥 Response Code: ${response.statusCode}');
+      print('📥 Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        print("✅ Action plan progress updated: $stepKey -> $newProgress%");
+        // await _fetchActionPlan();
+        onStepTap({
+          'refresh': true,
+        });
+
+        return true;
+      } else {
+        print("❌ Failed to update: ${response.statusCode}");
+        return false;
+      }
+    } catch (e) {
+      print("⚠️ Error updating action plan: $e");
+      return false;
+    }
+  }
+
+  Future<void> _markActionCompleted(Map<String, dynamic> step, BuildContext context) async {
+    bool confirmed = await _showConfirmationDialog(context);
+
+    if (confirmed) {
+      final lastWeek = await fetchLastWeekValue();
+      final updated = await _updateActionPlanProgress(step, 100, lastWeek);
+
+      if (updated) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✓ Progress updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update progress'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+
   const ActionListSection({
     super.key,
     required this.actionPlan,
     required this.loading,
     required this.onStepTap,
+    this.lastWeek,
   });
 
   @override
@@ -1655,7 +1886,36 @@ class ActionListSection extends StatelessWidget {
               ),
               subtitle: Text('Progress: ${step['progress']}%'),
               onTap: () => onStepTap(step),
+              // TICK BUTTON ADDED HERE
+              trailing: (step['progress'] ?? 0) == 100
+                  ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.check_circle, color: Colors.green, size: 30),
+                  SizedBox(height: 4),
+                  Text(
+                    '🏆 Earned',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              )
+                  : GestureDetector(
+                onTap: () => _markActionCompleted(step, context),
+
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(
+                      Icons.check_circle_outline,
+                      color: Colors.blue,
+                      size: 30,
+                    ),
+                  ],
+                ),
+              ),
+
             ),
+
           ),
         );
       },
@@ -1682,28 +1942,7 @@ class ActionListSection extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 20),
-            // ElevatedButton.icon(
-            //   icon: const Icon(Icons.add, color: Colors.white),
-            //   label: const Text(
-            //     'Add Action Plan',
-            //     style: TextStyle(color: Colors.white),
-            //   ),
-            //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: Colors.blue,
-            //     shape: RoundedRectangleBorder(
-            //       borderRadius: BorderRadius.circular(8),
-            //       side: BorderSide.none, // 🔥 removes border completely
-            //     ),
-            //     padding: const EdgeInsets.symmetric(
-            //       horizontal: 24,
-            //       vertical: 12,
-            //     ),
-            //   ),
-            //   onPressed: () {
-            //     int currentWeekNumber = getCurrentWeekNumber();
-            //     Get.to(() => WeekNavigationScreen(currentWeekNumber));
-            //   },
-            // ),
+
             FilledButton.icon(
               icon: const Icon(Icons.add, color: Colors.white),
               label: const Text(
@@ -1717,10 +1956,18 @@ class ActionListSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              onPressed: () {
-                int currentWeekNumber = getCurrentWeekNumber();
-                Get.to(() => WeekNavigationScreen(currentWeekNumber));
+              // onPressed: () {
+              //   int currentWeekNumber = getCurrentWeekNumber();
+              //   Get.to(() => WeekNavigationScreen(currentWeekNumber));
+              // },
+              onPressed: lastWeek == null
+                  ? null
+                  : () {
+                Get.to(() => WeekNavigationScreen(lastWeek!));
               },
+
+
+
             )
 
           ],

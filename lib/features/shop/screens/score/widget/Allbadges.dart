@@ -211,17 +211,31 @@ class AllbadgesScreen extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  Text(
-                                    badge.name,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: score >= badge.unlocked
-                                          ? Colors.black
-                                          : Colors.white70,
+                                  // Text(
+                                  //   badge.name,
+                                  //   textAlign: TextAlign.center,
+                                  //   style: TextStyle(
+                                  //     fontSize: 14,
+                                  //     fontWeight: FontWeight.bold,
+                                  //     color: score >= badge.unlocked
+                                  //         ? Colors.black
+                                  //         : Colors.white70,
+                                  //   ),
+                                  // ),
+                                  Flexible(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        badge.name,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: score >= badge.unlocked ? Colors.black : Colors.white70,
+                                        ),
+                                      ),
                                     ),
                                   ),
+
                                 ],
                               ),
                             ),

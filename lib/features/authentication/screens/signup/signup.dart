@@ -138,8 +138,8 @@ class SignupScreen extends StatelessWidget {
                     const SizedBox(height: TSizes.spaceBtwInputFields),
                     TextFormField(
                       controller: controller.income,
-                      validator: (value) =>
-                          TValidator.validateEmptyText('Income', value),
+                      // validator: (value) =>
+                      //     TValidator.validateEmptyText('Income', value),
                       decoration: const InputDecoration(
                         labelText: "Income (Anually)",
                         prefixIcon: Icon(Iconsax.money),

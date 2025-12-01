@@ -704,6 +704,42 @@ class _FuelCardState extends State<FuelCard> with SingleTickerProviderStateMixin
   }
 
 
+  // void _captureAndShare() async {
+  //   try {
+  //     await Future.delayed(const Duration(milliseconds: 300));
+  //     await WidgetsBinding.instance.endOfFrame;
+  //
+  //     RenderRepaintBoundary boundary =
+  //     _repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+  //
+  //     if (boundary.debugNeedsPaint) {
+  //       await Future.delayed(const Duration(milliseconds: 50));
+  //       return _captureAndShare();
+  //     }
+  //
+  //     var image = await boundary.toImage(pixelRatio: 3.0);
+  //     ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
+  //     Uint8List pngBytes = byteData!.buffer.asUint8List();
+  //
+  //     final directory = await getTemporaryDirectory();
+  //     final filePath = '${directory.path}/share_score.png';
+  //     final file = File(filePath);
+  //
+  //     await file.writeAsBytes(pngBytes, flush: true);
+  //
+  //     final xfile = XFile(
+  //       file.path,
+  //       mimeType: 'image/png',
+  //     );
+  //
+  //     await Share.shareXFiles([xfile], text: "Check out my progress!");
+  //
+  //   } catch (e) {
+  //     print("Share Error: $e");
+  //   }
+  // }
+
+
 }
 
 
