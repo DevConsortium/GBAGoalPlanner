@@ -2,20 +2,17 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tea/common/widgets/appbar/appbar.dart';
 import 'package:tea/common/widgets/custom_shapes/containers/primary_header_container.dart';
 import 'package:tea/features/shop/screens/home/widgets/PercentageProgress.dart';
 import 'package:tea/features/shop/screens/score/widget/Allbadges.dart';
-import 'package:tea/features/shop/screens/score/widget/Premiumbg.dart';
 import 'package:tea/features/shop/screens/score/widget/StatsGrid.dart';
-import 'package:tea/features/shop/screens/score/widget/badgesScreen.dart';
 import 'package:tea/utils/constants/colors.dart';
 import 'package:http/http.dart' as http;
 import 'dart:math' as math;
@@ -89,6 +86,30 @@ class ScoreScreen extends StatelessWidget {
     }
   }
 
+  Future<Map<String, dynamic>?> fetchWeeklyScore() async {
+    final userId = GetStorage().read('userId');
+    final week = GetStorage().read('userId');
+    final url = Uri.parse(
+      'https://todo.jpsofttechnologies.tech/api/weeklyscore/$userId/$week',
+    );
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['success'] == true && data['data'] != null) {
+        return {
+          'score': data['data']['score'],
+          'completedGoals': data['data']['completedGoals'],
+        };
+      } else {
+        return null;
+      }
+    } else {
+      throw Exception('Failed to load top goal score');
+    }
+  }
+
   Future<List<Map<String, dynamic>>> fetchGoalCategoryCounts() async {
     final userId = GetStorage().read('userId');
     final url = Uri.parse(
@@ -134,10 +155,10 @@ class ScoreScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: Theme.of(context)
                             .textTheme
-                            .titleLarge!              // 🔥 smaller than headlineMedium
+                            .titleLarge!
                             .apply(
                           color: TColors.white,
-                          fontSizeFactor: 1.3,    // 🔥 make it even smaller
+                          fontSizeFactor: 1.3,
                         ),
                       ),
                       showBackArrow: false,
@@ -159,7 +180,9 @@ class ScoreScreen extends StatelessWidget {
               SingleChildScrollView(
                 child: Column(
                   children: <Widget>[
-                    // just this
+
+
+                    // Achived
                     FutureBuilder<Map<String, dynamic>?>(
                       future: fetchTotalScore(),
                       builder: (context, snapshot) {
@@ -182,6 +205,116 @@ class ScoreScreen extends StatelessWidget {
                       },
                     ),
                     // card ends
+
+
+                    // Weekly Score
+                    FutureBuilder<Map<String, dynamic>?>(
+                      future: fetchTotalScore(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text('Error loading your Score'),
+                          );
+                        } else if (snapshot.hasData && snapshot.data != null) {
+                          final score = snapshot.data!['score'];
+                          final completedGoals =
+                          snapshot.data!['completedGoals'];
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 8,
+                            ),
+                            child: Card(
+                              color: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.indigo.shade500,
+                                      Colors.blue.shade400,
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 6,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 56,
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: Colors.transparent,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Center(
+                                          child: PercentageProgress(
+                                            percentage:
+                                            completedGoals * 100 / 16,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'You have achieved $completedGoals of 16 goals',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              'Total Score: $score',
+                                              style: const TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        } else {
+                          return Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text('No top category yet.'),
+                          );
+                        }
+                      },
+                    ),
 
                     // Score Section
                     FutureBuilder<Map<String, dynamic>?>(
@@ -453,6 +586,7 @@ class ScoreScreen extends StatelessWidget {
                             child: const Text("View Badges"),
                           ),
                         ),
+
                       ),
                     ),
                   ],
@@ -581,6 +715,8 @@ class _FuelCardState extends State<FuelCard> with SingleTickerProviderStateMixin
 
               SizedBox(height: 16),
 
+
+
               // Share Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -628,49 +764,23 @@ class _FuelCardState extends State<FuelCard> with SingleTickerProviderStateMixin
                       ),
                       onPressed: _captureAndShare,
                       child: const Text("Share Score"),
+
                     ),
+
                   ),
+
                 ),
               ),
+
             ],
+
           ),
+
         ),
       ),
     );
   }
 
-  // Capture screenshot and share functionality
-  // void _captureAndShare() async {
-  //   try {
-  //     // Wait for the current frame to finish rendering
-  //     await Future.delayed(const Duration(milliseconds: 100));
-  //     await WidgetsBinding.instance.endOfFrame;
-  //
-  //     // Now capture the image safely
-  //     RenderRepaintBoundary boundary =
-  //     _repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-  //
-  //     // Ensure it's painted before capturing
-  //     if (boundary.debugNeedsPaint) {
-  //       await Future.delayed(const Duration(milliseconds: 20));
-  //       return _captureAndShare(); // try again after painting
-  //     }
-  //
-  //     var image = await boundary.toImage(pixelRatio: 3.0);
-  //     ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
-  //     Uint8List uint8List = byteData!.buffer.asUint8List();
-  //
-  //     final directory = await getApplicationDocumentsDirectory();
-  //     final file = File('${directory.path}/screenshot.png');
-  //     await file.writeAsBytes(uint8List);
-  //
-  //     // Share.shareFiles([file.path], text: 'Check out my progress!');
-  //     Share.shareXFiles([XFile(file.path)], text: 'Check out my progress!');
-  //
-  //   } catch (e) {
-  //     print('Error capturing screenshot: $e');
-  //   }
-  // }
   void _captureAndShare() async {
     try {
       // Wait for the UI frame to finish rendering
@@ -703,45 +813,7 @@ class _FuelCardState extends State<FuelCard> with SingleTickerProviderStateMixin
     }
   }
 
-
-  // void _captureAndShare() async {
-  //   try {
-  //     await Future.delayed(const Duration(milliseconds: 300));
-  //     await WidgetsBinding.instance.endOfFrame;
-  //
-  //     RenderRepaintBoundary boundary =
-  //     _repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-  //
-  //     if (boundary.debugNeedsPaint) {
-  //       await Future.delayed(const Duration(milliseconds: 50));
-  //       return _captureAndShare();
-  //     }
-  //
-  //     var image = await boundary.toImage(pixelRatio: 3.0);
-  //     ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
-  //     Uint8List pngBytes = byteData!.buffer.asUint8List();
-  //
-  //     final directory = await getTemporaryDirectory();
-  //     final filePath = '${directory.path}/share_score.png';
-  //     final file = File(filePath);
-  //
-  //     await file.writeAsBytes(pngBytes, flush: true);
-  //
-  //     final xfile = XFile(
-  //       file.path,
-  //       mimeType: 'image/png',
-  //     );
-  //
-  //     await Share.shareXFiles([xfile], text: "Check out my progress!");
-  //
-  //   } catch (e) {
-  //     print("Share Error: $e");
-  //   }
-  // }
-
-
 }
-
 
 class FuelMeterPainter extends CustomPainter {
   final double progress;
@@ -784,7 +856,6 @@ class FuelMeterPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => true;
 }
-
 
 class NutrientInfo extends StatelessWidget {
   final String label;

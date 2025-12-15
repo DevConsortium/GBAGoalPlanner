@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -9,7 +8,6 @@ import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:tea/common/widgets/custom_shapes/containers/primary_header_container.dart';
 import 'package:tea/features/shop/controllers/Events/EventsController.dart';
-import 'package:tea/features/shop/screens/actionplan/addactionplan.dart';
 import 'package:tea/features/shop/screens/goalform/maingoal.dart';
 import 'package:tea/features/shop/screens/home/services/notification_services.dart';
 import 'package:tea/features/shop/screens/home/widgets/HealthBox.dart';
@@ -120,18 +118,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // void schedulePlanNotification(DateTime reminderTime, String message) async {
-  //   if (reminderTime.isAfter(DateTime.now())) {
-  //     await scheduleAlarm(
-  //       reminderTime.millisecondsSinceEpoch ~/ 1000, // unique ID
-  //       reminderTime,
-  //       message,
-  //     );
-  //     debugPrint("🔔 Scheduled reminder for $reminderTime");
-  //   } else {
-  //     debugPrint("⚠️ Reminder time is in the past, not scheduling.");
-  //   }
-  // }
 
   // Fetching Action Plan
   Future<void> _fetchActionPlan() async {
@@ -145,6 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
+        print(currentWeek);
         final Map<String, dynamic> data = jsonDecode(response.body);
 
         if (data['message'] == 'Action Plan retrieved successfully') {
@@ -587,210 +574,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // void _showStepDetails(BuildContext context, Map<String, dynamic> step) {
-  //   double currentProgress = (step['progress'] ?? 0).toDouble();
-  //   int getCurrentWeekNumber() {
-  //     final now = DateTime.now();
-  //     final beginningOfYear = DateTime(now.year, 1, 1);
-  //     final daysPassed = now.difference(beginningOfYear).inDays;
-  //     return ((daysPassed + beginningOfYear.weekday) / 7).ceil();
-  //   }
-  //
-  //   showModalBottomSheet(
-  //     context: context,
-  //     isScrollControlled: true,
-  //     builder: (_) {
-  //       return StatefulBuilder(
-  //         builder: (context, setModalState) {
-  //           return DraggableScrollableSheet(
-  //             expand: false,
-  //             initialChildSize: 0.6,
-  //             minChildSize: 0.3,
-  //             maxChildSize: 0.9,
-  //             builder: (_, controller) {
-  //               return Container(
-  //                 width: double.infinity,
-  //                 padding: const EdgeInsets.all(16),
-  //                 child: SingleChildScrollView(
-  //                   controller: controller,
-  //                   child: Column(
-  //                     crossAxisAlignment: CrossAxisAlignment.start,
-  //                     children: [
-  //                       Text(
-  //                         step['title'] ?? '',
-  //                         style: const TextStyle(
-  //                           fontSize: 20,
-  //
-  //                           fontWeight: FontWeight.bold,
-  //                         ),
-  //                       ),
-  //                       const SizedBox(height: 10),
-  //                       Text('Progress: ${currentProgress.toInt()}%'),
-  //                       const SizedBox(height: 20),
-  //
-  //                       Slider(
-  //                         min: 0,
-  //                         max: 100,
-  //                         divisions: 100,
-  //                         value: currentProgress,
-  //                         label: "${currentProgress.toInt()}%",
-  //                         activeColor: Colors.blueAccent,
-  //                         onChanged: (value) {
-  //                           setModalState(() {
-  //                             currentProgress = value;
-  //                           });
-  //                         },
-  //                       ),
-  //
-  //                       const SizedBox(height: 10),
-  //
-  //                       ElevatedButton.icon(
-  //                         icon: const Icon(Icons.save),
-  //                         label: const Text('Update Progress'),
-  //                         style: ElevatedButton.styleFrom(
-  //                           backgroundColor: Colors.green,
-  //                           minimumSize: const Size(double.infinity, 45),
-  //                         ),
-  //                         onPressed: () async {
-  //                           // Call your API
-  //                           final updated = await _updateActionPlanProgress(
-  //                             step,
-  //                             currentProgress.toInt(),
-  //                             getCurrentWeekNumber(),
-  //                           );
-  //
-  //                           // bool updated=true;
-  //                           if (updated) {
-  //                             ScaffoldMessenger.of(context).showSnackBar(
-  //                               const SnackBar(
-  //                                 content: Text(
-  //                                   '✅ Progress updated successfully!',
-  //                                 ),
-  //                                 backgroundColor: Colors.green,
-  //                               ),
-  //                             );
-  //                             Navigator.pop(context);
-  //                           } else {
-  //                             ScaffoldMessenger.of(context).showSnackBar(
-  //                               const SnackBar(
-  //                                 content: Text('❌ Failed to update progress'),
-  //                                 backgroundColor: Colors.red,
-  //                               ),
-  //                             );
-  //                           }
-  //                         },
-  //                       ),
-  //
-  //                       const SizedBox(height: 20),
-  //
-  //                       // ✅ Set Reminder button
-  //                       ElevatedButton.icon(
-  //                         icon: const Icon(Icons.alarm),
-  //                         label: const Text('Set Reminder'),
-  //                         style: ElevatedButton.styleFrom(
-  //                           backgroundColor: Colors.blue,
-  //                           minimumSize: const Size(double.infinity, 45),
-  //                         ),
-  //                         onPressed: () async {
-  //                           // Step 1: Pick date
-  //                           final pickedDate = await showDatePicker(
-  //                             context: context,
-  //                             initialDate: DateTime.now(),
-  //                             firstDate: DateTime.now(),
-  //                             lastDate: DateTime(2100),
-  //                           );
-  //                           if (pickedDate == null) return;
-  //
-  //                           // Step 2: Pick time
-  //                           final pickedTime = await showTimePicker(
-  //                             context: context,
-  //                             initialTime: TimeOfDay.now(),
-  //                           );
-  //                           if (pickedTime == null) return;
-  //
-  //                           // Step 3: Combine date + time
-  //                           final scheduledDateTime = DateTime(
-  //                             pickedDate.year,
-  //                             pickedDate.month,
-  //                             pickedDate.day,
-  //                             pickedTime.hour,
-  //                             pickedTime.minute,
-  //                           );
-  //
-  //                           // Step 4: Prevent scheduling in the past
-  //                           if (scheduledDateTime.isBefore(DateTime.now())) {
-  //                             ScaffoldMessenger.of(context).showSnackBar(
-  //                               const SnackBar(
-  //                                 content: Text('❌ Cannot schedule a reminder in the past!'),
-  //                                 backgroundColor: Colors.red,
-  //                                 duration: Duration(seconds: 2),
-  //                               ),
-  //                             );
-  //                             return;
-  //                           }
-  //
-  //
-  //                           print(scheduledDateTime);
-  //                           // Step 4 — 🔥 SCHEDULE THE NOTIFICATION
-  //                           await NotificationService.scheduleNotification(
-  //                             title: step['title'] ?? "Reminder",
-  //                             body: "You have an upcoming task.",
-  //                             scheduledDateTime: scheduledDateTime,
-  //                             payload: {"stepTitle": step['title'] ?? ""},
-  //                           );
-  //                           print("Close");
-  //
-  //
-  //                           // ✅ Optional: save in SharedPreferences to show in your notification screen
-  //                           final prefs = await SharedPreferences.getInstance();
-  //                           final existing = prefs.getStringList('notifications') ?? [];
-  //                           existing.add('${step['title']}|${scheduledDateTime.toIso8601String()}');
-  //                           await prefs.setStringList('notifications', existing);
-  //
-  //                           // ✅ Step 6: Show confirmation
-  //                           ScaffoldMessenger.of(context).showSnackBar(
-  //                             const SnackBar(
-  //                               content: Text('✅ Reminder added successfully!'),
-  //                               backgroundColor: Colors.green,
-  //                               duration: Duration(seconds: 2),
-  //                             ),
-  //                           );
-  //                         },
-  //                       ),
-  //
-  //
-  //                       const SizedBox(height: 10),
-  //
-  //
-  //                       const SizedBox(height: 10),
-  //                       ElevatedButton(
-  //                         onPressed: () => Navigator.pop(context),
-  //                         child: const Text('Close'),
-  //                         style: ElevatedButton.styleFrom(
-  //                           backgroundColor: Colors.black,
-  //                           minimumSize: const Size(double.infinity, 45),
-  //                         ),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ),
-  //               );
-  //             },
-  //           );
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
   void _showStepDetails(BuildContext context, Map<String, dynamic> step) {
     double currentProgress = (step['progress'] ?? 0).toDouble();
-
-    int getCurrentWeekNumber() {
-      final now = DateTime.now();
-      final beginningOfYear = DateTime(now.year, 1, 1);
-      final daysPassed = now.difference(beginningOfYear).inDays;
-      return ((daysPassed + beginningOfYear.weekday) / 7).ceil();
-    }
 
     showModalBottomSheet(
       context: context,
@@ -983,15 +768,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 pickedTime.hour,
                                 pickedTime.minute,
                               );
-
-                              // if (scheduledDateTime.isBefore(DateTime.now())) {
-                              //   return ScaffoldMessenger.of(context).showSnackBar(
-                              //     const SnackBar(
-                              //       content: Text('Cannot schedule in the past'),
-                              //       backgroundColor: Colors.red,
-                              //     ),
-                              //   );
-                              // }
 
                               await NotificationService.scheduleNotification(
                                 title: step['title'] ?? "Reminder",
